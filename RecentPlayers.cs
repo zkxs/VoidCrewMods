@@ -3,7 +3,6 @@
 // Copyright © 2024 Michael Ripley
 
 using System;
-using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -43,12 +42,7 @@ namespace RecentPlayers
                     GetAsyncMethodBody(AccessTools.DeclaredMethod(typeof(PhotonService), nameof(PhotonService.Connect))),
                     postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.AddCallbacksOnce))));
 
-                harmony.Patch(
-                    AccessTools.DeclaredMethod(typeof(PhotonService), nameof(PhotonService.Connect)),
-                    prefix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.LogStackTrace))));
-
-                // Nothing broke. Emit a log to indicate this.
-                Logger.LogInfo("successfully installed patches!");
+                Logger.LogDebug("successfully installed patches!"); // Nothing broke. Emit a log to indicate this.
             }
             catch (Exception e)
             {
@@ -127,29 +121,8 @@ namespace RecentPlayers
                         PhotonNetwork.NetworkingClient.AddCallbackTarget(new PhotonMatchmakingCallbacks());
                         Logger!.LogInfo($"successfully finished initializing!");
                     }
-                    else
-                    {
-                        Logger!.LogDebug("AddCallbacksOnce() was called again!");
-                    }
-                }
-                else
-                {
-                    Logger!.LogDebug("PhotonService.Connect() failed!");
                 }
             }
-
-            // debug prints who the hell just called the method we're patching
-            internal static void LogStackTrace()
-            {
-                StackTrace stackTrace = new(true);
-                Logger!.LogDebug($"stackTrace = {stackTrace}");
-                for (int i = 0; i < stackTrace.FrameCount; i++)
-                {
-                    var frame = stackTrace.GetFrame(i);
-                    Logger!.LogDebug($"  {i,2}: {frame}");
-                }
-            }
-
         }
     }
 }
