@@ -6,7 +6,9 @@ using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Timers;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using Photon.Pun;
@@ -22,6 +24,8 @@ namespace RecentPlayers
         internal const string MOD_NAME = "RecentPlayers";
         internal const string MOD_VERSION = "1.0.0";
 
+        private const double TIMER_INTERVAL_MS = 1000 * 60 * 2; // two minutes
+
         internal static new ManualLogSource? Logger;
 
         private static int initialized = 0;
@@ -29,11 +33,17 @@ namespace RecentPlayers
         // used to remember which LoadBalancingClients we've registered callbacks on already
         private static ConditionalWeakTable<LoadBalancingClient, object> hookedLoadBalancingClients = new();
 
+        private static System.Timers.Timer? timer = null;
+
+        private static ConfigEntry<bool>? runTimer;
+
         private void Awake()
         {
             try
             {
                 Logger = base.Logger; // this lets us access the logger from static contexts later: namely our patches.
+
+                runTimer = Config.Bind("General", "Timer", true, "Periodically resend the played-with-user event to Steam. Without this, the event is only sent on lobby join.");
 
                 Harmony harmony = new Harmony(GUID);
 
@@ -58,11 +68,30 @@ namespace RecentPlayers
             }
         }
 
+        private static void SetTimer()
+        {
+            timer = new(TIMER_INTERVAL_MS);
+            timer.Elapsed += OnTimerEvent;
+            timer.Start();
+        }
+
+        private static void OnTimerEvent(object source, ElapsedEventArgs eventArgs)
+        {
+            if (runTimer!.Value)
+            {
+                SetLobbyPlayedWith();
+            }
+        }
+
         public static void SetLobbyPlayedWith()
         {
-            foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
+            var players = PhotonNetwork.CurrentRoom?.Players?.Values;
+            if (players != null)
             {
-                SetPlayedWith(player);
+                foreach (Player player in players)
+                {
+                    SetPlayedWith(player);
+                }
             }
         }
 
@@ -151,6 +180,7 @@ namespace RecentPlayers
                     {
                         // this code will only run once, even when called by multiple threads
                         AddLoadBalancingClientCallbacks(PhotonNetwork.NetworkingClient);
+                        SetTimer();
                         Logger!.LogDebug($"Hooked PhotonService.Connect");
                     }
                 }
