@@ -3,6 +3,7 @@
 // Copyright © 2024 Michael Ripley
 
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -41,6 +42,10 @@ namespace RecentPlayers
                 harmony.Patch(
                     GetAsyncMethodBody(AccessTools.DeclaredMethod(typeof(PhotonService), nameof(PhotonService.Connect))),
                     postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.AddCallbacksOnce))));
+
+                harmony.Patch(
+                    AccessTools.DeclaredMethod(typeof(PhotonService), nameof(PhotonService.Connect)),
+                    prefix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.LogStackTrace))));
 
                 // Nothing broke. Emit a log to indicate this.
                 Logger.LogInfo("successfully installed patches!");
@@ -112,19 +117,39 @@ namespace RecentPlayers
             // postfix for async PhotonService.Connect()
             internal static void AddCallbacksOnce()
             {
-                // atomically set `initialized` to 1 and return the previous value. This will only return `0` once.
-                if (Interlocked.CompareExchange(ref initialized, 1, 0) == 0)
+                if (PhotonNetwork.IsConnected)
                 {
-                    // this code will only run once, even when called by multiple threads
-                    PhotonNetwork.NetworkingClient.AddCallbackTarget(new PhotonInRoomCallbacks());
-                    PhotonNetwork.NetworkingClient.AddCallbackTarget(new PhotonMatchmakingCallbacks());
-                    Logger!.LogInfo($"successfully finished initializing!");
+                    // atomically set `initialized` to 1 and return the previous value. This will only return `0` once.
+                    if (Interlocked.CompareExchange(ref initialized, 1, 0) == 0)
+                    {
+                        // this code will only run once, even when called by multiple threads
+                        PhotonNetwork.NetworkingClient.AddCallbackTarget(new PhotonInRoomCallbacks());
+                        PhotonNetwork.NetworkingClient.AddCallbackTarget(new PhotonMatchmakingCallbacks());
+                        Logger!.LogInfo($"successfully finished initializing!");
+                    }
+                    else
+                    {
+                        Logger!.LogDebug("AddCallbacksOnce() was called again!");
+                    }
                 }
                 else
                 {
-                    Logger!.LogDebug("AddCallbacksOnce() was called again!");
+                    Logger!.LogDebug("PhotonService.Connect() failed!");
                 }
             }
+
+            // debug prints who the hell just called the method we're patching
+            internal static void LogStackTrace()
+            {
+                StackTrace stackTrace = new(true);
+                Logger!.LogDebug($"stackTrace = {stackTrace}");
+                for (int i = 0; i < stackTrace.FrameCount; i++)
+                {
+                    var frame = stackTrace.GetFrame(i);
+                    Logger!.LogDebug($"  {i,2}: {frame}");
+                }
+            }
+
         }
     }
 }
