@@ -1,0 +1,4 @@
+# Files generated as part of release.sh
+/BepInEx/
+/manifest.json
+/*.zip
