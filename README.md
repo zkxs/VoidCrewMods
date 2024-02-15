@@ -2,7 +2,7 @@
 
 A mod for [Void Crew](https://store.steampowered.com/app/1063420/Void_Crew/) that populates the Steam overlay's recent players section with players you've been in a lobby with.
 
-## Installation
+## Manual Installation
 
 1. Install [BepInEx 5](https://github.com/BepInEx/BepInEx) into your Void Crew game folder. This mod is NOT made for
    BepInEx 6.
