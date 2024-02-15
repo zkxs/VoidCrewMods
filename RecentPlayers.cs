@@ -3,6 +3,8 @@
 // Copyright © 2024 Michael Ripley
 
 using System;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using BepInEx;
 using BepInEx.Logging;
@@ -31,10 +33,17 @@ namespace RecentPlayers
                 Logger = base.Logger; // this lets us access the logger from static contexts later: namely our patches.
 
                 Harmony harmony = new Harmony(GUID);
-                harmony.PatchAll();
+
+                harmony.Patch(
+                    AccessTools.DeclaredMethod(typeof(MatchmakingHandler), "Awake"),
+                    postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.MatchmakingHandlerAwake))));
+
+                harmony.Patch(
+                    GetAsyncMethodBody(AccessTools.DeclaredMethod(typeof(PhotonService), nameof(PhotonService.Connect))),
+                    postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.AddCallbacksOnce))));
 
                 // Nothing broke. Emit a log to indicate this.
-                Logger.LogInfo($"{MOD_NAME} successfully installed patches!");
+                Logger.LogInfo("successfully installed patches!");
             }
             catch (Exception e)
             {
@@ -72,24 +81,48 @@ namespace RecentPlayers
             return new CSteamID(ulong.Parse((string)player.CustomProperties["STEAMID"]));
         }
 
-        [HarmonyPatch]
-        public class HarmonyPatches
+        private static MethodInfo GetAsyncMethodBody(MethodInfo asyncMethod)
         {
-            [HarmonyPostfix]
-            [HarmonyPatch(typeof(MatchmakingHandler), nameof(MatchmakingHandler.StartRetrievingRooms))]
-            public static void RegisterPhotonCallbacks(LoadBalancingClient ___client)
+            AsyncStateMachineAttribute asyncAttribute = asyncMethod.GetCustomAttribute<AsyncStateMachineAttribute>();
+            if (asyncAttribute == null)
+            {
+                throw new ReflectionException($"Could not find AsyncStateMachine for {asyncMethod}");
+            }
+            Type asyncStateMachineType = asyncAttribute.StateMachineType;
+            MethodInfo asyncMethodBody = AccessTools.DeclaredMethod(asyncStateMachineType, "MoveNext");
+            if (asyncMethodBody == null)
+            {
+                throw new ReflectionException($"Could not find async method body for {asyncMethod}");
+            }
+            return asyncMethodBody;
+        }
+
+        // the methods within this class are not called normally: they're harmony patches
+        private static class HarmonyPatches
+        {
+            // postifx for MatchmakingHandler.Awake()
+            // as far as I know this isn't used
+            internal static void MatchmakingHandlerAwake(LoadBalancingClient ___client)
+            {
+                ___client.AddCallbackTarget(new PhotonInRoomCallbacks());
+                ___client.AddCallbackTarget(new PhotonMatchmakingCallbacks());
+                Logger!.LogDebug("hooked MatchmakingHandlerAwake.Awake()");
+            }
+
+            // postfix for async PhotonService.Connect()
+            internal static void AddCallbacksOnce()
             {
                 // atomically set `initialized` to 1 and return the previous value. This will only return `0` once.
                 if (Interlocked.CompareExchange(ref initialized, 1, 0) == 0)
                 {
                     // this code will only run once, even when called by multiple threads
-                    ___client.AddCallbackTarget(new PhotonInRoomCallbacks());
-                    ___client.AddCallbackTarget(new PhotonMatchmakingCallbacks());
-                    Logger!.LogInfo($"{MOD_NAME} successfully finished initializing!");
+                    PhotonNetwork.NetworkingClient.AddCallbackTarget(new PhotonInRoomCallbacks());
+                    PhotonNetwork.NetworkingClient.AddCallbackTarget(new PhotonMatchmakingCallbacks());
+                    Logger!.LogInfo($"successfully finished initializing!");
                 }
                 else
                 {
-                    Logger!.LogDebug("MatchmakingHandler.StartRetrievingRooms() was called again!");
+                    Logger!.LogDebug("AddCallbacksOnce() was called again!");
                 }
             }
         }
