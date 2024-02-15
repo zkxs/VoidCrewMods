@@ -36,6 +36,7 @@ namespace RecentPlayers
         private static System.Timers.Timer? timer = null;
 
         private static ConfigEntry<bool>? runTimer;
+        private static ConfigEntry<bool>? debugLogs;
 
         private void Awake()
         {
@@ -44,6 +45,7 @@ namespace RecentPlayers
                 Logger = base.Logger; // this lets us access the logger from static contexts later: namely our patches.
 
                 runTimer = Config.Bind("General", "Timer", true, "Periodically resend the played-with-user event to Steam. Without this, the event is only sent on lobby join.");
+                debugLogs = Config.Bind("Debug", "Debug Logs", true, "Emit LogLevel.Debug logs. In the default BepInEx.cfg these go nowhere. If you have BepInEx debug logging enabled and this mod's logs are bothering you, set this config to false.");
 
                 Harmony harmony = new Harmony(GUID);
 
@@ -65,6 +67,14 @@ namespace RecentPlayers
             {
                 base.Logger.LogError($"Something has gone terribly wrong:\n{e}");
                 throw e;
+            }
+        }
+
+        private static void LogDebug(Func<string> messageFunc)
+        {
+            if (debugLogs!.Value)
+            {
+                Logger!.LogDebug(messageFunc.Invoke());
             }
         }
 
@@ -102,7 +112,7 @@ namespace RecentPlayers
                 if (!player.IsLocal)
                 {
                     SteamFriends.SetPlayedWith(GetSteamID(player));
-                    Logger!.LogDebug($"SetPlayedWith({player})");
+                    LogDebug(() => $"SetPlayedWith({player})");
                 }
             }
             catch (ArgumentNullException)
@@ -155,7 +165,7 @@ namespace RecentPlayers
 
             if (existingMapping)
             {
-                Logger!.LogDebug("We encountered a LoadBalancingClient more than once. This is unexpected, but handled.");
+                LogDebug(() => "We encountered a LoadBalancingClient more than once. This is unexpected, but handled.");
             }
         }
 
@@ -167,7 +177,7 @@ namespace RecentPlayers
             internal static void MatchmakingHandlerAwake(LoadBalancingClient ___client)
             {
                 AddLoadBalancingClientCallbacks(___client);
-                Logger!.LogDebug("Hooked MatchmakingHandler.Awake");
+                LogDebug(() => "Hooked MatchmakingHandler.Awake");
             }
 
             // postfix for async PhotonService.Connect()
@@ -181,7 +191,7 @@ namespace RecentPlayers
                         // this code will only run once, even when called by multiple threads
                         AddLoadBalancingClientCallbacks(PhotonNetwork.NetworkingClient);
                         SetTimer();
-                        Logger!.LogDebug($"Hooked PhotonService.Connect");
+                        LogDebug(() => "Hooked PhotonService.Connect");
                     }
                 }
             }
