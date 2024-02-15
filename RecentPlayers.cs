@@ -22,7 +22,7 @@ namespace RecentPlayers
     {
         internal const string GUID = "dev.zkxs.voidcrew.recentplayers";
         internal const string MOD_NAME = "RecentPlayers";
-        internal const string MOD_VERSION = "1.0.0";
+        internal const string MOD_VERSION = "1.1.0";
 
         private const double TIMER_INTERVAL_MS = 1000 * 60 * 2; // two minutes
 
