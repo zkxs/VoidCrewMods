@@ -3,7 +3,6 @@
 // Copyright © 2024 Michael Ripley
 
 using System.Collections.Generic;
-using Photon.Pun;
 using Photon.Realtime;
 
 namespace RecentPlayers
@@ -35,10 +34,7 @@ namespace RecentPlayers
         /// </summary>
         public void OnJoinedRoom()
         {
-            foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
-            {
-                RecentPlayers.SetPlayedWith(player);
-            }
+            RecentPlayers.SetLobbyPlayedWith();
         }
 
         public void OnJoinRandomFailed(short returnCode, string message)

@@ -58,6 +58,14 @@ namespace RecentPlayers
             }
         }
 
+        public static void SetLobbyPlayedWith()
+        {
+            foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
+            {
+                SetPlayedWith(player);
+            }
+        }
+
         public static void SetPlayedWith(Player player)
         {
             try
