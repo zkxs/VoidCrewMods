@@ -1,0 +1,9 @@
+{
+    "name": "Template",
+    "description": "TEMPLATE MOD DO NOT UPLOAD",
+    "version_number": "$VERSION",
+    "dependencies": [
+        "BepInEx-BepInExPack-5.4.2100"
+    ],
+    "website_url": "https://github.com/zkxs/VoidCrewMods/Template"
+}

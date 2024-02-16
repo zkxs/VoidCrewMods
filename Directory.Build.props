@@ -1,0 +1,48 @@
+﻿<Project>
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <FileAlignment>512</FileAlignment>
+    <LangVersion>12.0</LangVersion>
+    <BaseOutputPath>$(MsBuildThisFileDirectory)bin</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MsBuildThisFileDirectory)obj</BaseIntermediateOutputPath>
+    <BuildProjectReferences>false</BuildProjectReferences>
+    <Nullable>enable</Nullable>
+    <Deterministic>true</Deterministic>
+    <CopyLocal>false</CopyLocal>
+    <CopyToMods Condition="'$(CopyToMods)'==''">true</CopyToMods>
+    <DebugSymbols Condition="'$(Configuration)'=='Release'">false</DebugSymbols>
+    <DebugType Condition="'$(Configuration)'=='Release'">None</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GamePath)'==''">
+    <GamePath Condition="Exists('C:\Program Files (x86)\Steam\steamapps\common\Void Crew\')">C:\Program Files (x86)\Steam\steamapps\common\Void Crew\</GamePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(GamePath)BepInEx\core\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(GamePath)Void Crew_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GamePath)Void Crew_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- make all references non-private, so they won't be copied to the output folder -->
+  <Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToMods)'=='true'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GamePath)BepInEx\plugins\zkxs" />
+    <Message Text="Copied $(TargetFileName) to $(GamePath)BepInEx\plugins\zkxs" Importance="high" />
+  </Target>
+</Project>
