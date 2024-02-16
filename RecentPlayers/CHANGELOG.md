@@ -4,9 +4,9 @@ This project follows [semantic versioning](https://semver.org/).
 
 # 1.1.0 - 2024-02-16
 
-## Added
+## Fixed
 
-- Fix for today's Void Crew update
+- Fix for today's Void Crew update changing where SteamIDs are stored.
 
 # 1.0.0 - 2024-02-15
 
