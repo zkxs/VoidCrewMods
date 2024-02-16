@@ -1,6 +1,6 @@
 # No Perk Confirm
 
-A mod for [Void Crew](https://store.steampowered.com/app/1063420/Void_Crew/) that removes confirmation popup for perk selection.
+Removes confirmation popup for perk selection.
 
 ## Manual Installation
 

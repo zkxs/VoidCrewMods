@@ -1,6 +1,6 @@
-# Void Crew Recent Players
+# Recent Players
 
-A mod for [Void Crew](https://store.steampowered.com/app/1063420/Void_Crew/) that populates the Steam overlay's recent players section with players you've been in a lobby with.
+Populates the Steam overlay's recent players section with players you've been in a lobby with.
 
 ## Manual Installation
 
