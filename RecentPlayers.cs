@@ -131,7 +131,11 @@ namespace RecentPlayers
 
         private static CSteamID GetSteamID(Player player)
         {
-            return new CSteamID(ulong.Parse((string)player.CustomProperties["STEAMID"]));
+            // possible steamid sources:
+            // 1. player.UserId
+            // 2. player.CustomProperties["UNITY_CLOUD_ID"] CloneStarConstants.UNITY_CLOUD_ID set in PhotonService.SetCommonPlayerProperties()
+            // 3. player.CustomProperties["STEAM_ID"] CloneStarConstants.STEAM_ID set in PhotonService.SetSteamPlayerProperties(), used in NameIconRankDisplayer.Internal_SetRemotePlayerSteamInfo()
+            return new CSteamID(ulong.Parse((string)player.CustomProperties[CloneStarConstants.STEAM_ID]));
         }
 
         private static MethodInfo GetAsyncMethodBody(MethodInfo asyncMethod)
