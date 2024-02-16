@@ -6,4 +6,4 @@ This project follows [semantic versioning](https://semver.org/).
 
 ## Added
 
-- Initial release
+- Initial release: it skips perk confirmation

@@ -8,7 +8,7 @@ using static NoPerkConfirm.NoPerkConfirm;
 
 [assembly: AssemblyTitle(MOD_NAME)]
 [assembly: AssemblyProduct(MOD_NAME)]
-[assembly: AssemblyDescription("Template mod")]
+[assembly: AssemblyDescription("Remove confirmation popup for perk selection")]
 [assembly: AssemblyCompany("Runtime Evil Inc")]
 [assembly: AssemblyCopyright("Copyright © 2024")]
 [assembly: ComVisible(false)]

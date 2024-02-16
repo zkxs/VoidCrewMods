@@ -6,7 +6,7 @@ A mod for [Void Crew](https://store.steampowered.com/app/1063420/Void_Crew/) tha
 
 1. Install [BepInEx 5](https://github.com/BepInEx/BepInEx) into your Void Crew game folder. This mod is NOT made for
    BepInEx 6.
-2. Add [RecentPlayers.dll](https://github.com/zkxs/VoidCrewRecentPlayers/releases/latest/download/RecentPlayers.dll) to your BepInEx `plugins`
+2. Add `RecentPlayers.dll` from the latest [release](https://github.com/zkxs/VoidCrewMods/releases) to your BepInEx `plugins`
    folder. If `plugins` doesn't exist, simply create the folder inside your `BepInEx` folder.
 
 If you did everything correctly, you should have `RecentPlayers.dll` at this location:
