@@ -21,7 +21,7 @@ namespace NoPerkConfirm
 
         internal static new ManualLogSource? Logger;
 
-        private static ConfigEntry<bool>? enabled;
+        private static ConfigEntry<bool>? modEnabled;
 
         private void Awake()
         {
@@ -29,7 +29,7 @@ namespace NoPerkConfirm
             {
                 Logger = base.Logger; // this lets us access the logger from static contexts later: namely our patches
 
-                enabled = Config.Bind("General", "Enable", true, "Enable skipping the perk confirmation popup");
+                modEnabled = Config.Bind("General", "Enable", true, "Enable skipping the perk confirmation popup");
 
                 Harmony harmony = new Harmony(GUID);
 
@@ -53,7 +53,7 @@ namespace NoPerkConfirm
             // prefix for PerkBuffTreeVE.TryPurchase()
             internal static bool PerkBuffTryPurchase(PerkBuff buff, TokenTerminalEvents ___events)
             {
-                if (!enabled!.Value)
+                if (!modEnabled!.Value)
                 {
                     return true; // run original method
                 }
