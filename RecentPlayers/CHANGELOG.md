@@ -2,11 +2,11 @@
 
 This project follows [semantic versioning](https://semver.org/).
 
-# 1.1.0 - unreleased
+# 1.1.0 - 2024-02-16
 
 ## Added
 
-- Configuration option to suppress debug logs. If you want to use this, you'll need [BepInEx.ConfigurationManager](https://github.com/BepInEx/BepInEx.ConfigurationManager). Note that ConfigurationManager does nto work in Void Crew unless you set `HideManagerGameObject = true` in `BepInEx/config/BepInEx.cfg`.
+- Fix for today's Void Crew update
 
 # 1.0.0 - 2024-02-15
 
