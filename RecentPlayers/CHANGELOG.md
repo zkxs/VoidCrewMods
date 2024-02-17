@@ -10,7 +10,7 @@ This project follows [semantic versioning](https://semver.org/).
 
 ## Fixed
 
-- Additional fixes for yesterday's Void Crew update. It turns out that Hutlihut is setting the STEAM_ID property to some sort of Unity Cloud ID, so I have to get the actualy SteamID from somewhere else.
+- Additional fixes for yesterday's Void Crew update. It turns out that Hutlihut is setting the STEAM_ID property to some sort of Unity Cloud ID, so I have to get the actual SteamID from somewhere else.
 
 # 1.1.0 - 2024-02-16
 
