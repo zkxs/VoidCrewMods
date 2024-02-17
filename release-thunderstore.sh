@@ -19,8 +19,8 @@ BUILD_DIR="$MOD_NAME/release-thunderstore"
 # extract version
 VERSION="$(rg -or '$1' 'MOD_VERSION = "(.+)";' $MOD_DIR/$MOD_NAME.cs)" || die
 
-# build project to ensure the extracted version matches the binary
-dotnet build "$MOD_DIR/$MOD_NAME.csproj" --configuration Release || die
+# rebuild project to ensure the extracted version matches the binary
+dotnet build "$MOD_DIR/$MOD_NAME.csproj" --no-restore --configuration Release || die
 
 # create release files
 mkdir -p "$BUILD_DIR/BepInEx/plugins" || die

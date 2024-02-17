@@ -1,3 +1,4 @@
 #!/bin/bash
-rm -rf bin obj
-dotnet build all-mods.csproj --configuration Release
+rm -rf bin obj *.zip
+dotnet restore all-mods.csproj --configfile NuGet.Offline.Config
+./build.sh
