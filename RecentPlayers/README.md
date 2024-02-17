@@ -1,6 +1,16 @@
 # Recent Players
 
-Populates the Steam overlay's recent players section with players you've been in a lobby with.
+Populates the Steam overlay's recent players section with players you've been in a lobby with. This lets you easily send friend requests to people who have been in your lobby. No more missed connections!
+
+## Usage
+
+To make use of this mod, open your steam overlay and:
+
+1. Open the Game Overview. The button will either be listed on the right or an icon on the bottom depending on your Steam settings.
+2. Press the "View Players" button. You may have to scroll down to find it.
+3. Add friends as you please!
+
+![usage screenshot](img/overlay-steps.png)
 
 ## Manual Installation
 

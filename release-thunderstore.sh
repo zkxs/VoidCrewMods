@@ -30,16 +30,25 @@ cat $BUILD_DIR/manifest-template.json \
     | sed "s/\$MOD_NAME/$MOD_NAME/" \
     > $BUILD_DIR/manifest.json || die
 
+# in the README, replace relavtive image URLs with absolute links:
+# from: img/image.png
+# to: https://raw.githubusercontent.com/zkxs/VoidCrewMods/master/Template/img/image.png
+# This is pretty rudimentary, and isn't clever enough to figure out if the URL in the link is already relative, so I have to ONLY use relative URLs on my image links (which is fine, because I like doing that anyways)
+cat $MOD_DIR/README.md \
+    | sed -E "s#(!\\[[^\\]*]\\()#\1https://raw.githubusercontent.com/zkxs/VoidCrewMods/master/$MOD_NAME/#" \
+    > $BUILD_DIR/README.md || die
+
 # create release zip. Note that 7z has no base directory flag, so I'm forced to cd into the archive's base directory
 rm "$MOD_NAME-$VERSION.zip" 2> /dev/null
 pushd . > /dev/null
 cd "$BUILD_DIR"
-7z a -mx9 "../../$MOD_NAME-$VERSION.zip" "BepInEx" "../README.md" "../CHANGELOG.md" "manifest.json" "icon.png" > /dev/null || die
+7z a -mx9 "../../$MOD_NAME-$VERSION.zip" "BepInEx" "README.md" "../CHANGELOG.md" "manifest.json" "icon.png" > /dev/null || die
 popd > /dev/null
 
 # If I need to debug the zip file structure, do this:
 #7z l "$MOD_NAME-$VERSION.zip"
 
 # clean up
+rm "$BUILD_DIR/README.md"
 rm "$BUILD_DIR/manifest.json"
 rm -r "$BUILD_DIR/BepInEx"

@@ -1,5 +1,6 @@
 # thunderstore build script generated files
 /*.zip
+/*/release-thunderstore/README.md
 /*/release-thunderstore/manifest.json
 /*/release-thunderstore/BepInEx/
 
