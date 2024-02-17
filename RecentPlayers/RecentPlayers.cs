@@ -10,6 +10,8 @@ using System.Timers;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using CG.Profile;
+using ExitGames.Client.Photon;
 using HarmonyLib;
 using Photon.Pun;
 using Photon.Realtime;
@@ -22,7 +24,7 @@ namespace RecentPlayers
     {
         internal const string GUID = "dev.zkxs.voidcrew.recentplayers";
         internal const string MOD_NAME = "RecentPlayers";
-        internal const string MOD_VERSION = "1.1.0";
+        internal const string MOD_VERSION = "1.1.1";
 
         private const double TIMER_INTERVAL_MS = 1000 * 60 * 2; // two minutes
 
@@ -31,7 +33,10 @@ namespace RecentPlayers
         private static int initialized = 0;
 
         // used to remember which LoadBalancingClients we've registered callbacks on already
-        private static ConditionalWeakTable<LoadBalancingClient, object> hookedLoadBalancingClients = new();
+        private static ConditionalWeakTable<LoadBalancingClient, object?> hookedLoadBalancingClients = new();
+
+        // players who's STEAM_ID property is malformed
+        private static ConditionalWeakTable<Player, object?> naughtyPlayers = new();
 
         private static System.Timers.Timer? timer = null;
 
@@ -60,6 +65,12 @@ namespace RecentPlayers
                 harmony.Patch(
                     GetAsyncMethodBody(AccessTools.DeclaredMethod(typeof(PhotonService), nameof(PhotonService.Connect))),
                     postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.AddCallbacksOnce))));
+
+                // there's a bug in this code in vanilla that sets your SteamID to your Unity Cloud ID, which is only SOMETIMES your SteamID.
+                // fixing the bug shouldn't cause any problems.
+                harmony.Patch(
+                    AccessTools.DeclaredMethod(typeof(PhotonService), "SetSteamPlayerProperties"),
+                    postfix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.SetSteamPlayerProperties))));
 
                 Logger.LogInfo("successfully installed patches!"); // Nothing broke. Emit a log to indicate this.
             }
@@ -107,35 +118,88 @@ namespace RecentPlayers
 
         public static void SetPlayedWith(Player player)
         {
-            try
+            if (!player.IsLocal)
             {
-                if (!player.IsLocal)
+                // if we already have tried STEAM_ID for this player, don't ever try it again. This prevents logspam.
+                if (!naughtyPlayers.TryGetValue(player, out _))
                 {
-                    SteamFriends.SetPlayedWith(GetSteamID(player));
+                    try
+                    {
+                        SteamFriends.SetPlayedWith(GetSteamID(player));
+                        LogDebug(() => $"SetPlayedWith({player})");
+                        return;
+                    }
+                    catch (SteamIdException e1)
+                    {
+                        naughtyPlayers.Add(player, null);
+                        LogDebug(() => $"Could not get SteamID for \"{player}\" from primary source, which is expected as the primary source is known to be bugged. Will try again with fallback source. {e1}");
+                    }
+                }
+
+                // if the player has a malformed STEAM_ID, we will try getting ID from fallback location
+                try
+                {
+                    SteamFriends.SetPlayedWith(GetSteamIDFallback(player));
                     LogDebug(() => $"SetPlayedWith({player})");
                 }
-            }
-            catch (ArgumentNullException)
-            {
-                Logger!.LogInfo($"Player \"{player}\" did not have a steam ID set");
-            }
-            catch (FormatException e)
-            {
-                Logger!.LogError($"Player \"{player}\" had a malformed steam ID: {e}");
-            }
-            catch (OverflowException e)
-            {
-                Logger!.LogError($"Player \"{player}\" had a malformed steam ID: {e}");
+                catch (SteamIdException e2)
+                {
+                    Logger!.LogWarning($"Could not get SteamID for \"{player}\". {e2}");
+                }
             }
         }
 
+        // get steam ID from: player.CustomProperties["STEAM_ID"]
+        // where "STEAM_ID" is defined intCloneStarConstants.STEAM_ID
+        // set in PhotonService.SetSteamPlayerProperties()
+        // used in NameIconRankDisplayer.Internal_SetRemotePlayerSteamInfo()
+        // ... except this isn't steam ID, it's AuthenticationService.Instance.PlayerId, aka Unity Cloud ID. This appears to be a developer oversight, and is probably breaking the player icon cache.
         private static CSteamID GetSteamID(Player player)
         {
-            // possible steamid sources:
-            // 1. player.UserId
-            // 2. player.CustomProperties["UNITY_CLOUD_ID"] CloneStarConstants.UNITY_CLOUD_ID set in PhotonService.SetCommonPlayerProperties()
-            // 3. player.CustomProperties["STEAM_ID"] CloneStarConstants.STEAM_ID set in PhotonService.SetSteamPlayerProperties(), used in NameIconRankDisplayer.Internal_SetRemotePlayerSteamInfo()
-            return new CSteamID(ulong.Parse((string)player.CustomProperties[CloneStarConstants.STEAM_ID]));
+            object steamidObject = player.CustomProperties?[CloneStarConstants.STEAM_ID] ?? throw new SteamIdException($"unset");
+            try
+            {
+                CSteamID steamId = new(ulong.Parse((string)steamidObject));
+                if (!steamId.BIndividualAccount())
+                {
+                    throw new SteamIdException($"\"{steamidObject}\" is not an individual account");
+                }
+                return steamId;
+            }
+            catch (InvalidCastException e)
+            {
+                throw new SteamIdException($"\"{steamidObject}\" is not a string", e);
+            }
+            catch (FormatException e)
+            {
+                throw new SteamIdException($"\"{steamidObject}\" could not be parsed", e);
+            }
+            catch (OverflowException e)
+            {
+                throw new SteamIdException($"\"{steamidObject}\" overflows", e);
+            }
+        }
+
+        // get steam ID from: player.UserId. No idea why this is SteamID, but it consistently is.
+        private static CSteamID GetSteamIDFallback(Player player)
+        {
+            object steamidObject = player?.UserId ?? throw new SteamIdException($"unset");
+            try
+            {
+                return new CSteamID(ulong.Parse((string)steamidObject));
+            }
+            catch (InvalidCastException e)
+            {
+                throw new SteamIdException($"\"{steamidObject}\" is not a string", e);
+            }
+            catch (FormatException e)
+            {
+                throw new SteamIdException($"\"{steamidObject}\" could not be parsed", e);
+            }
+            catch (OverflowException e)
+            {
+                throw new SteamIdException($"\"{steamidObject}\" overflows", e);
+            }
         }
 
         private static MethodInfo GetAsyncMethodBody(MethodInfo asyncMethod)
@@ -160,11 +224,17 @@ namespace RecentPlayers
             hookedLoadBalancingClients.GetValue(client, client =>
             {
                 existingMapping = false;
-                client.AddCallbackTarget(new PhotonInRoomCallbacks());
-                client.AddCallbackTarget(new PhotonMatchmakingCallbacks());
-#pragma warning disable CS8603 // Possible null reference return.
+                try
+                {
+                    client.AddCallbackTarget(new PhotonInRoomCallbacks());
+                    client.AddCallbackTarget(new PhotonMatchmakingCallbacks());
+                }
+                catch (Exception e)
+                {
+                    // handle all exceptions because I don't trust Photon's API at all
+                    Logger!.LogError($"Some mystery error happened when adding photon callbacks: {e}");
+                }
                 return null; // in practice ConditionalWeakTable doesn't care if the value is null, so just squelch this warning
-#pragma warning restore CS8603 // Possible null reference return.
             });
 
             if (existingMapping)
@@ -197,6 +267,22 @@ namespace RecentPlayers
                         SetTimer();
                         LogDebug(() => "Hooked PhotonService.Connect");
                     }
+                }
+            }
+
+            // postfix for async PhotonService.SetSteamPlayerProperties()
+            internal static void SetSteamPlayerProperties()
+            {
+                try
+                {
+                    object oldSteamId = PhotonNetwork.LocalPlayer.CustomProperties[CloneStarConstants.STEAM_ID];
+                    PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable { { CloneStarConstants.STEAM_ID, PlayerProfile.GetSteamID() } });
+                    LogDebug(() => $"Changed our STEAM_ID property from \"{oldSteamId}\" to \"{PlayerProfile.GetSteamID()}\". Note that our UNITY_CLOUD_ID is \"{PlayerProfile.GetUnityCloudID()}\" and our Photon UserId is \"{PhotonNetwork.LocalPlayer.UserId}\"");
+                }
+                catch (Exception e)
+                {
+                    // handle all exceptions because I don't trust Photon's API at all
+                    Logger!.LogError($"Some mystery error happened when setting our SteamID: {e}");
                 }
             }
         }
