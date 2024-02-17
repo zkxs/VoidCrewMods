@@ -1,9 +1,9 @@
 {
-    "name": "NoPerkConfirm",
-    "description": " Removes confirmation popup for perk selection",
+    "name": "$MOD_NAME",
+    "description": "Removes confirmation popup for perk selection",
     "version_number": "$VERSION",
     "dependencies": [
         "BepInEx-BepInExPack-5.4.2100"
     ],
-    "website_url": "https://github.com/zkxs/VoidCrewMods/tree/master/NoPerkConfirm"
+    "website_url": "https://github.com/zkxs/VoidCrewMods/tree/master/$MOD_NAME"
 }
