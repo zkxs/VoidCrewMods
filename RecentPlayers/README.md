@@ -6,7 +6,7 @@ Populates the Steam overlay's recent players section with players you've been in
 
 To make use of this mod, open your steam overlay and:
 
-1. Open the Game Overview. The button will either be listed on the right or an icon on the bottom depending on your Steam settings.
+1. Open the Game Overview. The button can be in different places depending on your Steam settings appearing either on the bottom as an icon or listed on the left as shown below.
 2. Press the "View Players" button. You may have to scroll down to find it.
 3. Add friends as you please!
 
