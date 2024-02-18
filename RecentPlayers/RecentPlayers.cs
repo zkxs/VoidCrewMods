@@ -50,7 +50,7 @@ namespace RecentPlayers
                 Logger = base.Logger; // this lets us access the logger from static contexts later: namely our patches.
 
                 runTimer = Config.Bind("General", "Timer", true, "Periodically resend the played-with-user event to Steam. Without this, the event is only sent on lobby join.");
-                debugLogs = Config.Bind("Debug", "Debug Logs", true, "Emit LogLevel.Debug logs. In the default BepInEx.cfg these go nowhere. If you have BepInEx debug logging enabled and this mod's logs are bothering you, set this config to false.");
+                debugLogs = Config.Bind("Debug", "Debug Logs", false, "Emit LogLevel.Debug logs. In the default BepInEx.cfg these go nowhere. If you have BepInEx debug logging enabled and this mod's logs are bothering you, set this config to false.");
 
                 Harmony harmony = new Harmony(GUID);
 
