@@ -3,6 +3,7 @@
 // Copyright © 2024 Michael Ripley
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -37,6 +38,7 @@ namespace RecentPlayers
 
         // players who's STEAM_ID property is malformed
         private static ConditionalWeakTable<Player, object?> naughtyPlayers = new();
+        private static HashSet<CSteamID> nicePlayers = new();
 
         private static System.Timers.Timer? timer = null;
 
@@ -125,7 +127,12 @@ namespace RecentPlayers
                 {
                     try
                     {
-                        SteamFriends.SetPlayedWith(GetSteamID(player));
+                        CSteamID steamID = GetSteamID(player);
+                        SteamFriends.SetPlayedWith(steamID);
+                        if (nicePlayers.Add(steamID))
+                        {
+                            Logger!.LogInfo($"{player} is using this mod!");
+                        }
                         LogDebug(() => $"SetPlayedWith({player})");
                         return;
                     }
@@ -140,7 +147,7 @@ namespace RecentPlayers
                 try
                 {
                     SteamFriends.SetPlayedWith(GetSteamIDFallback(player));
-                    LogDebug(() => $"SetPlayedWith({player})");
+                    LogDebug(() => $"SetPlayedWith({player}) fallback");
                 }
                 catch (SteamIdException e2)
                 {
