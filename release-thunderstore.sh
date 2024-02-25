@@ -1,4 +1,11 @@
 #!/bin/bash
+
+# This script does the legwork to generate a Thunderstore zip file for the specified mod. This solves a few potential human error scenarios:
+# 1. Mod's version is specified in ONE place only, so there's no way I can blunder and desync it.
+# 2. Mod is rebuilt before packing, so there's no way I can pack the wrong dll.
+# 3. The relative links to images I use in my markdown are converted to absolute links to the github repo, because Thunderstore can't handle anything else.
+# 4. The file structure of the zip is defined in code, so I can't screw up the BepInEx/plugins path.
+
 MOD_NAME="$1"
 if [ -z "$MOD_NAME" ]; then
     echo "usage: ./release-thunderstore.sh <mod_name>"
