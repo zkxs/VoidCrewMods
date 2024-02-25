@@ -33,7 +33,7 @@ namespace NoPerkConfirm
 
                 Harmony harmony = new Harmony(GUID);
 
-                // I have no idea why the game creates LoadBalancingClients for like 6 different MatchmakingHandlers, but whatever, we'll hook them just in case
+                // Do a full prefix replacement on this method, but minus the function call that creates the popup
                 harmony.Patch(
                     AccessTools.DeclaredMethod(typeof(PerkBuffTreeVE), "TryPurchase"),
                     prefix: new HarmonyMethod(AccessTools.DeclaredMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.PerkBuffTryPurchase))));

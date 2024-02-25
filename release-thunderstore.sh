@@ -30,7 +30,7 @@ cat $BUILD_DIR/manifest-template.json \
     | sed "s/\$MOD_NAME/$MOD_NAME/" \
     > $BUILD_DIR/manifest.json || die
 
-# in the README, replace relavtive image URLs with absolute links:
+# in the README, replace relative image URLs with absolute links:
 # from: img/image.png
 # to: https://raw.githubusercontent.com/zkxs/VoidCrewMods/master/Template/img/image.png
 # This is pretty rudimentary, and isn't clever enough to figure out if the URL in the link is already relative, so I have to ONLY use relative URLs on my image links (which is fine, because I like doing that anyways)
