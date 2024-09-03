@@ -24,7 +24,7 @@ namespace RecentPlayers
     {
         internal const string GUID = "dev.zkxs.voidcrew.recentplayers";
         internal const string MOD_NAME = "RecentPlayers";
-        internal const string MOD_VERSION = "1.1.1";
+        internal const string MOD_VERSION = "1.2.0";
 
         private const double TIMER_INTERVAL_MS = 1000 * 60 * 2; // two minutes
 
@@ -263,6 +263,7 @@ namespace RecentPlayers
                     if (Interlocked.CompareExchange(ref initialized, 1, 0) == 0)
                     {
                         // this code will only run once, even when called by multiple threads
+                        ModdingUtils.RegisterLocalMod();
                         AddLoadBalancingClientCallbacks(PhotonNetwork.NetworkingClient);
                         SetTimer();
                         LogDebug(() => "Hooked PhotonService.Connect");
