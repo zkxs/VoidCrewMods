@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecentPlayers", "RecentPlay
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Template", "Template\Template.csproj", "{BFB564EE-9385-41F6-87D5-4CC48351D117}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SaveLocally", "SaveLocally\SaveLocally.csproj", "{8841BA2C-3F44-4D7E-8C04-BC8B6E4C377B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{BFB564EE-9385-41F6-87D5-4CC48351D117}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BFB564EE-9385-41F6-87D5-4CC48351D117}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BFB564EE-9385-41F6-87D5-4CC48351D117}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8841BA2C-3F44-4D7E-8C04-BC8B6E4C377B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8841BA2C-3F44-4D7E-8C04-BC8B6E4C377B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8841BA2C-3F44-4D7E-8C04-BC8B6E4C377B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8841BA2C-3F44-4D7E-8C04-BC8B6E4C377B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
