@@ -44,6 +44,8 @@ namespace RecentPlayers
 
         private static ConfigEntry<bool>? runTimer;
         private static ConfigEntry<bool>? debugLogs;
+        private static ConfigEntry<bool>? logNicePlayers;
+        private static ConfigEntry<bool>? registerMod;
 
         private void Awake()
         {
@@ -53,6 +55,8 @@ namespace RecentPlayers
 
                 runTimer = Config.Bind("General", "Timer", true, "Periodically resend the played-with-user event to Steam. Without this, the event is only sent on lobby join.");
                 debugLogs = Config.Bind("Debug", "Debug Logs", false, "Emit LogLevel.Debug logs. In the default BepInEx.cfg these go nowhere. If you have BepInEx debug logging enabled and this mod's logs are bothering you, set this config to false.");
+                logNicePlayers = Config.Bind("Debug", "Log Nice Players", false, "Log players who have their STEAM_ID property set to a Steam ID. This is an indicator they may also be using this mod.");
+                registerMod = Config.Bind("Debug", "Register Mod", true, "Call the RegisterLocalMod method, as rquired by the modding muidelines.");
 
                 Harmony harmony = new Harmony(GUID);
 
@@ -131,7 +135,10 @@ namespace RecentPlayers
                         SteamFriends.SetPlayedWith(steamID);
                         if (nicePlayers.Add(steamID))
                         {
-                            Logger!.LogInfo($"{player} is using this mod!");
+                            if (logNicePlayers!.Value)
+                            {
+                                Logger!.LogInfo($"{player} is using this mod!");
+                            }
                         }
                         LogDebug(() => $"SetPlayedWith({player})");
                         return;
@@ -270,7 +277,10 @@ namespace RecentPlayers
                     if (Interlocked.CompareExchange(ref initialized, 1, 0) == 0)
                     {
                         // this code will only run once, even when called by multiple threads
-                        ModdingUtils.RegisterLocalMod();
+                        if (registerMod!.Value)
+                        {
+                            ModdingUtils.RegisterLocalMod();
+                        }
                         AddLoadBalancingClientCallbacks(PhotonNetwork.NetworkingClient);
                         SetTimer();
                         LogDebug(() => "Hooked PhotonService.Connect");
