@@ -3,6 +3,7 @@
 // Copyright © 2024 Michael Ripley
 
 using System;
+using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Logging;
 using CG.Cloud;
@@ -39,16 +40,35 @@ namespace SaveLocally
         [HarmonyPatch]
         private static class HarmonyPatches
         {
+            // vanilla implmentation only saves UNSEEN.json
             [HarmonyPrefix]
             [HarmonyPatch(typeof(CloudLocalProfile), "OnQuit")]
             private static bool CloudLocalProfileOnQuit(CloudLocalProfile __instance)
             {
                 if (PlayerProfile.Instance != null)
                 {
-                    PlayerProfileLocalSave.SaveProfile(__instance);
+                    try
+                    {
+                        PlayerProfileLocalSave.SaveProfile(__instance);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger!.LogError($"Error persisting profile:\n{e}");
+                    }
                 }
                 return false; // skip original method
             }
+
+            // vanilla implmentation throws NotImplementedException
+            [HarmonyPrefix]
+            [HarmonyPatch(typeof(CloudShipLoadoutSync), nameof(CloudShipLoadoutSync.Loadouts), MethodType.Getter)]
+            private static bool CloudShipLoadoutSyncLoadoutsGetter(ref IReadOnlyList<IShipLoadoutProfile> __result, CloudShipLoadoutSync __instance)
+            {
+                IShipLoadoutController shipLoadout = (IShipLoadoutController)AccessTools.DeclaredProperty(typeof(ChainOfResponsibility<IShipLoadoutController>), "source").GetValue(__instance);
+                __result = shipLoadout.Loadouts;
+                return false; // skip original method
+            }
+
         }
     }
 }
